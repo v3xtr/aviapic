@@ -1,0 +1,29 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: ${sprint.datasource.database.name}
+      POSTGRES_USER: ${spring.datasource.username}
+      POSTGRES_PASSWORD: ${spring.datasource.password}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  app:
+    build: .
+    ports:
+      - "8080:8080"
+    environment:
+      SPRING_PROFILES_ACTIVE: prod
+      DB_URL: jdbc:postgresql://postgres:5432/shopdb
+      DB_USER: ${spring.datasource.username}
+      DB_PASSWORD: ${spring.datasource.password}
+
+    depends_on:
+      - postgres
+
+volumes:
+  postgres_data:
