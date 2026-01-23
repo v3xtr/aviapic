@@ -1,29 +1,39 @@
-version: '3.8'
+version: '3.9'
+
+networks:
+  backend-test-network:
+
+volumes:
+  postgres_test_data:
 
 services:
   postgres:
-    image: postgres:16-alpine
+    image: postgres:16
+    container_name: postgres
+    networks:
+      - backend-test-network
     environment:
-      POSTGRES_DB: ${sprint.datasource.database.name}
-      POSTGRES_USER: ${spring.datasource.username}
-      POSTGRES_PASSWORD: ${spring.datasource.password}
+      POSTGRES_DB: java
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
     ports:
       - "5432:5432"
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - postgres_test_data:/var/lib/postgresql/data
 
   app:
     build: .
+    container_name: backend-test-app
+    networks:
+      - backend-test-network
     ports:
       - "8080:8080"
     environment:
       SPRING_PROFILES_ACTIVE: prod
-      DB_URL: jdbc:postgresql://postgres:5432/shopdb
-      DB_USER: ${spring.datasource.username}
-      DB_PASSWORD: ${spring.datasource.password}
-
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/java
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: postgres
+      JAVA_OPTS: "-XX:+UseContainerSupport -XX:MaxRAMPercentage=75.0"
     depends_on:
       - postgres
-
-volumes:
-  postgres_data:
+    entrypoint: ["./start.sh"]
